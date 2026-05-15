@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAGISTA — Supplier Production Order</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #f7f5f0;
+    color: #12384D;
+    padding: 30px 20px;
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 1250px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(18, 56, 77, 0.08);
+  }
+
+  /* Header */
+  .header {
+    background: #12384D;
+    color: #F1EDDF;
+    padding: 30px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 4px solid #C6A87C;
+  }
+  .brand-name {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    color: #C6A87C;
+  }
+  .header-meta {
+    text-align: right;
+    font-size: 12px;
+    color: #F1EDDF;
+    line-height: 1.7;
+  }
+  .header-meta strong { color: #C6A87C; font-weight: 500; letter-spacing: 1px; }
+
+  /* Title bar */
+  .title-bar {
+    background: #F1EDDF;
+    padding: 18px 40px;
+    border-bottom: 1px solid #e8e2cf;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .title-bar h1 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #12384D;
+    letter-spacing: 1px;
+  }
+  .title-bar .subtitle {
+    font-size: 12px;
+    color: #8a7a55;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+  .reset-btn {
+    background: transparent;
+    border: 1px solid #C6A87C;
+    color: #8a6d3f;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover {
+    background: #C6A87C;
+    color: #fff;
+  }
+
+  /* KPI Cards */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: #e8e2cf;
+  }
+  .kpi {
+    background: #ffffff;
+    padding: 22px 20px;
+    text-align: center;
+  }
+  .kpi-label {
+    font-size: 10px;
+    color: #8a7a55;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-size: 24px;
+    font-weight: 300;
+    color: #12384D;
+  }
+  .kpi-value .unit {
+    font-size: 12px;
+    color: #8a7a55;
+    margin-right: 4px;
+  }
+  .kpi-progress {
+    font-size: 12px;
+    color: #2d7a4d;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  /* Section divider */
+  .section-divider {
+    background: #12384D;
+    color: #C6A87C;
+    padding: 12px 40px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+  }
+  thead {
+    background: #12384D;
+    color: #F1EDDF;
+  }
+  thead th {
+    padding: 14px 10px;
+    font-size: 10.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: left;
+    border-bottom: 2px solid #C6A87C;
+  }
+  thead th.center { text-align: center; }
+  tbody tr {
+    border-bottom: 1px solid #f0ebda;
+    transition: background 0.15s;
+  }
+  tbody tr:nth-child(even) {
+    background: #fbfaf5;
+  }
+  tbody tr.checked {
+    background: #e8f4ea !important;
+    opacity: 0.7;
+  }
+  tbody tr.checked .product-name-en,
+  tbody tr.checked .product-name-ar,
+  tbody tr.checked .weight,
+  tbody tr.checked .total-weight {
+    text-decoration: line-through;
+    color: #8a7a55;
+  }
+  tbody td {
+    padding: 11px 10px;
+    font-size: 13px;
+    color: #2a2a2a;
+    vertical-align: middle;
+  }
+  tbody td.center { text-align: center; }
+  .row-num {
+    color: #8a7a55;
+    font-weight: 500;
+    font-size: 12px;
+  }
+  .product-img {
+    width: 65px;
+    height: 65px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #e8e2cf;
+    background: #fbfaf5;
+    display: block;
+  }
+  .product-name-en {
+    font-weight: 500;
+    color: #12384D;
+    font-size: 13px;
+    margin-bottom: 3px;
+  }
+  .product-name-ar {
+    font-size: 13px;
+    color: #6b6b6b;
+    direction: rtl;
+    text-align: left;
+  }
+  .size-badge {
+    display: inline-block;
+    background: #C6A87C;
+    color: #ffffff;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 32px;
+  }
+  .weight { color: #2a2a2a; font-weight: 500; }
+  .qty-badge {
+    display: inline-block;
+    background: #12384D;
+    color: #C6A87C;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 36px;
+  }
+  .total-weight { color: #12384D; font-weight: 600; }
+
+  /* Check column */
+  .check-col {
+    text-align: center;
+    width: 65px;
+  }
+  .check-box {
+    width: 26px;
+    height: 26px;
+    border: 2px solid #C6A87C;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    transition: all 0.15s;
+    user-select: none;
+    font-size: 16px;
+    color: transparent;
+  }
+  .check-box:hover {
+    background: #F1EDDF;
+  }
+  .check-box.checked {
+    background: #2d7a4d;
+    border-color: #2d7a4d;
+    color: #ffffff;
+  }
+
+  /* OK status column */
+  .ok-col {
+    text-align: center;
+    width: 90px;
+  }
+  .ok-toggle {
+    display: inline-block;
+    padding: 5px 12px;
+    border: 1px solid #C6A87C;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #8a6d3f;
+    background: #ffffff;
+    min-width: 55px;
+    user-select: none;
+    transition: all 0.15s;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .ok-toggle:hover { background: #F1EDDF; }
+  .ok-toggle.ok-1 { background: #2d7a4d; color: #ffffff; border-color: #2d7a4d; }
+  .ok-toggle.ok-2 { background: #1d5d39; color: #ffffff; border-color: #1d5d39; }
+  .ok-toggle.ok-3 { background: #0d4527; color: #ffffff; border-color: #0d4527; }
+
+  /* Group separator */
+  .product-group-first td {
+    border-top: 2px solid #e8e2cf;
+  }
+  tbody tr.product-group-first:first-child td {
+    border-top: none;
+  }
+
+  /* Footer total row */
+  tfoot tr {
+    background: #12384D;
+    color: #F1EDDF;
+  }
+  tfoot td {
+    padding: 16px 10px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+  tfoot td.label {
+    text-align: right;
+    color: #C6A87C;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+  tfoot td.value {
+    text-align: center;
+    color: #F1EDDF;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* Footer */
+  .footer {
+    background: #F1EDDF;
+    padding: 18px 40px;
+    text-align: center;
+    font-size: 11px;
+    color: #8a7a55;
+    letter-spacing: 1px;
+    border-top: 1px solid #e8e2cf;
+  }
+  .footer .saved {
+    display: inline-block;
+    background: #2d7a4d;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    margin-right: 10px;
+    letter-spacing: 1px;
+  }
+
+  /* Print */
+  @media print {
+    body { background: #ffffff; padding: 0; }
+    .container { box-shadow: none; }
+    tbody tr { break-inside: avoid; }
+    .reset-btn { display: none; }
+    .check-box, .ok-toggle { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand-name">MAGISTA</div>
+    <div class="header-meta">
+      <strong>FINE GOLD JEWELRY</strong><br>
+      Jeddah, Saudi Arabia<br>
+      magista.store
+    </div>
+  </div>
+
+  <!-- Title -->
+  <div class="title-bar">
+    <div>
+      <h1>Supplier Production Order — Bangles</h1>
+      <div class="subtitle">Order Date: Friday, May 15, 2026 &nbsp;·&nbsp; Gold Karat: 21K &nbsp;·&nbsp; Auto-save enabled</div>
+    </div>
+    <button class="reset-btn" onclick="resetAll()">Reset All Checks</button>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Total Products</div>
+      <div class="kpi-value">20</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Total Quantity</div>
+      <div class="kpi-value">84 <span class="unit">pcs</span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Total Weight</div>
+      <div class="kpi-value">613.3 <span class="unit">g</span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Progress</div>
+      <div class="kpi-value" id="progress-count">0 / 38</div>
+      <div class="kpi-progress" id="progress-pct">0% complete</div>
+    </div>
+  </div>
+
+  <!-- Order Table -->
+  <table id="order-table">
+    <thead>
+      <tr>
+        <th class="center" style="width:36px;">#</th>
+        <th class="center" style="width:75px;">Image</th>
+        <th style="width:auto;">Product</th>
+        <th class="center" style="width:70px;">Size</th>
+        <th class="center" style="width:90px;">Unit Weight</th>
+        <th class="center" style="width:75px;">Qty</th>
+        <th class="center" style="width:90px;">Total Weight</th>
+        <th class="center" style="width:65px;">Done</th>
+        <th class="center" style="width:90px;">Factory Check</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- 1. Cast Olive Branch -->
+      <tr class="product-group-first" data-id="olive-17">
+        <td class="center row-num" rowspan="2">1</td>
+        <td class="center" rowspan="2"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/3M6LstBKPDGixRWW4HQhTdMs6mqxYWFQT8WGdzhN.jpg" alt=""></td>
+        <td rowspan="2">
+          <div class="product-name-en">Cast Olive Branch Bangles</div>
+          <div class="product-name-ar">بناجر دقة أغصان الزيتون صب</div>
+        </td>
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">10.7 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">21.4 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="olive-19">
+        <td class="center"><span class="size-badge">19</span></td>
+        <td class="center"><span class="weight">12.7 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">25.4 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 2. Boxed Sand -->
+      <tr class="product-group-first" data-id="sand-11">
+        <td class="center row-num" rowspan="2">2</td>
+        <td class="center" rowspan="2"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/vMDhfEcNi9J94D0lOVgIO9ElXsbwZZY79e4o2R8x.jpg" alt=""></td>
+        <td rowspan="2">
+          <div class="product-name-en">Boxed Sand Bangles</div>
+          <div class="product-name-ar">بناجر دقة الرمال مصندق</div>
+        </td>
+        <td class="center"><span class="size-badge">11</span></td>
+        <td class="center"><span class="weight">2.6 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">2.6 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="sand-17">
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">5.0 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">5.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 3. Boxed Spike -->
+      <tr class="product-group-first" data-id="sunbula-14">
+        <td class="center row-num" rowspan="1">3</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/zGxCgdqHCu9R0JrUVZiBNrHs2Yx3Z8gnTFdPLNDd.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Boxed Spike Bangles</div>
+          <div class="product-name-ar">بناجر دقة السنبلة مصندق</div>
+        </td>
+        <td class="center"><span class="size-badge">14</span></td>
+        <td class="center"><span class="weight">5.8 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">11.6 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 4. Cobra -->
+      <tr class="product-group-first" data-id="cobra-16">
+        <td class="center row-num" rowspan="2">4</td>
+        <td class="center" rowspan="2"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/6rFECgSHK24fvuJc0Pjnf49cvU95smprmsKoJK8b.jpg" alt=""></td>
+        <td rowspan="2">
+          <div class="product-name-en">Cobra Bangles</div>
+          <div class="product-name-ar">بناجر دقة الكوبرا</div>
+        </td>
+        <td class="center"><span class="size-badge">16</span></td>
+        <td class="center"><span class="weight">5.0 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">5.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="cobra-18">
+        <td class="center"><span class="size-badge">18</span></td>
+        <td class="center"><span class="weight">5.7 g</span></td>
+        <td class="center"><span class="qty-badge">5</span></td>
+        <td class="center total-weight">28.5 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 5. Mirror -->
+      <tr class="product-group-first" data-id="mirror-17">
+        <td class="center row-num" rowspan="1">5</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/gP8HpvwleUAN53wPMj0VJSMZ2EmfH8SwJW1gycFl.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Mirror Bangles</div>
+          <div class="product-name-ar">بناجر دقة المرايا</div>
+        </td>
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">7.1 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">14.2 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 6. Boxed Wave -->
+      <tr class="product-group-first" data-id="wave-12">
+        <td class="center row-num" rowspan="1">6</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/WBPKkiEEq9fRRhpq4qRRynrzoQAAToeGhGj4WMuR.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Boxed Wave Bangles</div>
+          <div class="product-name-ar">بناجر دقة الموج مصندق</div>
+        </td>
+        <td class="center"><span class="size-badge">12</span></td>
+        <td class="center"><span class="weight">3.1 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">6.2 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 7. Rose -->
+      <tr class="product-group-first" data-id="rose-18">
+        <td class="center row-num" rowspan="1">7</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/2tT08s3n4vmIqcrTSi7IEiWELPKSDq9ZI6E95Jn7.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Rose Bangles</div>
+          <div class="product-name-ar">بناجر دقة الوردة</div>
+        </td>
+        <td class="center"><span class="size-badge">18</span></td>
+        <td class="center"><span class="weight">6.4 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">12.8 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 8. Mini Rose -->
+      <tr class="product-group-first" data-id="minirose-16">
+        <td class="center row-num" rowspan="2">8</td>
+        <td class="center" rowspan="2"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/MZgLaAeO53BWtijcoOofivanHOHmtDVSDoeb0Yko.jpg" alt=""></td>
+        <td rowspan="2">
+          <div class="product-name-en">Mini Rose Bangles</div>
+          <div class="product-name-ar">بناجر دقة الوردة ميني</div>
+        </td>
+        <td class="center"><span class="size-badge">16</span></td>
+        <td class="center"><span class="weight">4.1 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">8.2 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="minirose-18">
+        <td class="center"><span class="size-badge">18</span></td>
+        <td class="center"><span class="weight">4.9 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">9.8 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 9. Boxed Pomegranate -->
+      <tr class="product-group-first" data-id="pom-17">
+        <td class="center row-num" rowspan="1">9</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/DhsZaMWEOrVA6QOZAMZhNQwzEq9i7QY1QNv4hXCD.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Boxed Pomegranate Bangles</div>
+          <div class="product-name-ar">بناجر دقة حب الرمان مصندق</div>
+        </td>
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">5.5 g</span></td>
+        <td class="center"><span class="qty-badge">4</span></td>
+        <td class="center total-weight">22.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 10. Two-Row Cardamom -->
+      <tr class="product-group-first" data-id="cardtwo-16">
+        <td class="center row-num" rowspan="3">10</td>
+        <td class="center" rowspan="3"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/BgE43RSoljtB4Gq33WEsSvwaeiN3X47YdJs8euqt.jpg" alt=""></td>
+        <td rowspan="3">
+          <div class="product-name-en">Two-Row Cardamom Bangles</div>
+          <div class="product-name-ar">بناجر دقة حب الهيل دورين</div>
+        </td>
+        <td class="center"><span class="size-badge">16</span></td>
+        <td class="center"><span class="weight">6.4 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">12.8 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="cardtwo-17">
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">6.7 g</span></td>
+        <td class="center"><span class="qty-badge">3</span></td>
+        <td class="center total-weight">20.1 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="cardtwo-18">
+        <td class="center"><span class="size-badge">18</span></td>
+        <td class="center"><span class="weight">7.2 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">7.2 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 11. Boxed Cardamom -->
+      <tr class="product-group-first" data-id="cardbox-13">
+        <td class="center row-num" rowspan="2">11</td>
+        <td class="center" rowspan="2"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/hh42vqoG9lndraG3DITUsfdu4O307RUQwscHyAoj.jpg" alt=""></td>
+        <td rowspan="2">
+          <div class="product-name-en">Boxed Cardamom Bangles</div>
+          <div class="product-name-ar">بناجر دقة حب الهيل مصندق</div>
+        </td>
+        <td class="center"><span class="size-badge">13</span></td>
+        <td class="center"><span class="weight">3.7 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">3.7 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="cardbox-17">
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">5.3 g</span></td>
+        <td class="center"><span class="qty-badge">4</span></td>
+        <td class="center total-weight">21.2 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 12. Rolex -->
+      <tr class="product-group-first" data-id="rolex-18">
+        <td class="center row-num" rowspan="1">12</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/TXwCiy8pB4ML4MkTupylVSWyBe9rnln3JHyvlOPt.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Rolex Bangles</div>
+          <div class="product-name-ar">بناجر دقة روليكس</div>
+        </td>
+        <td class="center"><span class="size-badge">18</span></td>
+        <td class="center"><span class="weight">7.3 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">14.6 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 13. Boxed Rolex -->
+      <tr class="product-group-first" data-id="rolexbox-17">
+        <td class="center row-num" rowspan="1">13</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/YUyacuwOl4fEnzOqKM9E56G8nomFcxMpOPXcusX2.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Boxed Rolex Bangles</div>
+          <div class="product-name-ar">بناجر دقة روليكس مصندق</div>
+        </td>
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">7.4 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">14.8 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 14. Slim Rolex -->
+      <tr class="product-group-first" data-id="rolexslim-16">
+        <td class="center row-num" rowspan="2">14</td>
+        <td class="center" rowspan="2"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/dMqerpPCpqKW6TONWBmjP4fDgPIGtnbu3KgSf4vL.jpg" alt=""></td>
+        <td rowspan="2">
+          <div class="product-name-en">Slim Rolex Bangles</div>
+          <div class="product-name-ar">بناجر دقة روليكس نحيف</div>
+        </td>
+        <td class="center"><span class="size-badge">16</span></td>
+        <td class="center"><span class="weight">6.9 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">6.9 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="rolexslim-17">
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">7.2 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">14.4 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 15. Wide Chaumet -->
+      <tr class="product-group-first" data-id="chaumetw-18">
+        <td class="center row-num" rowspan="1">15</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/2cFZfVUQybfwbAPBubOV0gV20ArcGRcxSFvHbX8M.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Wide Chaumet Bangles</div>
+          <div class="product-name-ar">بناجر دقة شوميه عريض</div>
+        </td>
+        <td class="center"><span class="size-badge">18</span></td>
+        <td class="center"><span class="weight">6.0 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">12.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 16. Slim Faisal Cord -->
+      <tr class="product-group-first" data-id="faisal-15">
+        <td class="center row-num" rowspan="4">16</td>
+        <td class="center" rowspan="4"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/OAU80BV1cDTVZyVG9Jm7VVxBXkzkc1w0qF4L81tN.jpg" alt=""></td>
+        <td rowspan="4">
+          <div class="product-name-en">Slim Faisal Cord Bangles</div>
+          <div class="product-name-ar">بناجر دقة عقال فيصل نحيف</div>
+        </td>
+        <td class="center"><span class="size-badge">15</span></td>
+        <td class="center"><span class="weight">5.3 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">5.3 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="faisal-17">
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">6.1 g</span></td>
+        <td class="center"><span class="qty-badge">4</span></td>
+        <td class="center total-weight">24.4 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="faisal-18">
+        <td class="center"><span class="size-badge">18</span></td>
+        <td class="center"><span class="weight">6.6 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">6.6 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="faisal-20">
+        <td class="center"><span class="size-badge">20</span></td>
+        <td class="center"><span class="weight">7.6 g</span></td>
+        <td class="center"><span class="qty-badge">6</span></td>
+        <td class="center total-weight">45.6 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 17. Cast Damascus Rose -->
+      <tr class="product-group-first" data-id="jouri-17">
+        <td class="center row-num" rowspan="1">17</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/4PxKxtsLPP3EzO7pP7slb4uIXYaJpmCOBhKxH2jf.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Cast Damascus Rose Bangles</div>
+          <div class="product-name-ar">بناجر دقة وردة الجوري صب</div>
+        </td>
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">14.7 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">29.4 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 18. Dior Wide -->
+      <tr class="product-group-first" data-id="dior-17">
+        <td class="center row-num" rowspan="1">18</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/CCXmemG1JyIeGYyNgfmT9x29j48h5tdcQDchjHcT.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Dior Wide Bangles</div>
+          <div class="product-name-ar">بناجر ديور عريض</div>
+        </td>
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">8.0 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">16.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 19. Slim Matte Chaumet -->
+      <tr class="product-group-first" data-id="chaumets-16">
+        <td class="center row-num" rowspan="1">19</td>
+        <td class="center" rowspan="1"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/W1D96oQQTZ8BPkEDdpALakLRTDEtXNz7UcSz8vCw.jpg" alt=""></td>
+        <td rowspan="1">
+          <div class="product-name-en">Slim Matte Chaumet Bangles</div>
+          <div class="product-name-ar">بناجر شوميه مطفي نحيف</div>
+        </td>
+        <td class="center"><span class="size-badge">16</span></td>
+        <td class="center"><span class="weight">3.8 g</span></td>
+        <td class="center"><span class="qty-badge">2</span></td>
+        <td class="center total-weight">7.6 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+      <!-- 20. Cast Twisted -->
+      <tr class="product-group-first" data-id="mabroom-16">
+        <td class="center row-num" rowspan="5">20</td>
+        <td class="center" rowspan="5"><img class="product-img" src="https://cdn.salla.sa/AzbgnQ/QcfRuKex4DhepzFrXOrfqUoIlzPc1bRqmGqP1Hqe.jpg" alt=""></td>
+        <td rowspan="5">
+          <div class="product-name-en">Cast Twisted Bangles</div>
+          <div class="product-name-ar">بناجر مبروم صب</div>
+        </td>
+        <td class="center"><span class="size-badge">16</span></td>
+        <td class="center"><span class="weight">8.0 g</span></td>
+        <td class="center"><span class="qty-badge">5</span></td>
+        <td class="center total-weight">40.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="mabroom-17">
+        <td class="center"><span class="size-badge">17</span></td>
+        <td class="center"><span class="weight">9.0 g</span></td>
+        <td class="center"><span class="qty-badge">5</span></td>
+        <td class="center total-weight">45.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="mabroom-18">
+        <td class="center"><span class="size-badge">18</span></td>
+        <td class="center"><span class="weight">10.0 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">10.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="mabroom-19">
+        <td class="center"><span class="size-badge">19</span></td>
+        <td class="center"><span class="weight">11.0 g</span></td>
+        <td class="center"><span class="qty-badge">1</span></td>
+        <td class="center total-weight">11.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+      <tr data-id="mabroom-20">
+        <td class="center"><span class="size-badge">20</span></td>
+        <td class="center"><span class="weight">12.0 g</span></td>
+        <td class="center"><span class="qty-badge">6</span></td>
+        <td class="center total-weight">72.0 g</td>
+        <td class="check-col"><div class="check-box" onclick="toggleCheck(this)">✓</div></td>
+        <td class="ok-col"><div class="ok-toggle" onclick="toggleOK(this)">—</div></td>
+      </tr>
+
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="5" class="label">Grand Total</td>
+        <td class="value">84 pcs</td>
+        <td class="value">613.3 g</td>
+        <td colspan="2"></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span class="saved">AUTO-SAVED</span>
+    MAGISTA &nbsp;·&nbsp; Fine Gold Jewelry &nbsp;·&nbsp; magista.store
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'magista_supplier_order_2026_05_15';
+
+function loadState() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    document.querySelectorAll('tr[data-id]').forEach(row => {
+      const id = row.dataset.id;
+      const state = data[id];
+      if (!state) return;
+      if (state.checked) {
+        row.classList.add('checked');
+        const cb = row.querySelector('.check-box');
+        if (cb) cb.classList.add('checked');
+      }
+      if (state.ok && state.ok > 0) {
+        const toggle = row.querySelector('.ok-toggle');
+        if (toggle) {
+          toggle.classList.add('ok-' + state.ok);
+          toggle.textContent = 'OK ' + state.ok;
+        }
+      }
+    });
+    updateProgress();
+  } catch(e) { console.error(e); }
+}
+
+function saveState() {
+  const data = {};
+  document.querySelectorAll('tr[data-id]').forEach(row => {
+    const id = row.dataset.id;
+    const checked = row.classList.contains('checked');
+    const toggle = row.querySelector('.ok-toggle');
+    let ok = 0;
+    if (toggle.classList.contains('ok-1')) ok = 1;
+    else if (toggle.classList.contains('ok-2')) ok = 2;
+    else if (toggle.classList.contains('ok-3')) ok = 3;
+    if (checked || ok > 0) data[id] = { checked, ok };
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function toggleCheck(el) {
+  const row = el.closest('tr');
+  row.classList.toggle('checked');
+  el.classList.toggle('checked');
+  saveState();
+  updateProgress();
+}
+
+function toggleOK(el) {
+  // cycle: — → OK 1 → OK 2 → OK 3 → —
+  if (el.classList.contains('ok-3')) {
+    el.classList.remove('ok-1','ok-2','ok-3');
+    el.textContent = '—';
+  } else if (el.classList.contains('ok-2')) {
+    el.classList.remove('ok-2');
+    el.classList.add('ok-3');
+    el.textContent = 'OK 3';
+  } else if (el.classList.contains('ok-1')) {
+    el.classList.remove('ok-1');
+    el.classList.add('ok-2');
+    el.textContent = 'OK 2';
+  } else {
+    el.classList.add('ok-1');
+    el.textContent = 'OK 1';
+  }
+  saveState();
+}
+
+function updateProgress() {
+  const total = document.querySelectorAll('tr[data-id]').length;
+  const done = document.querySelectorAll('tr[data-id].checked').length;
+  const pct = total > 0 ? Math.round((done/total)*100) : 0;
+  document.getElementById('progress-count').innerHTML = done + ' / ' + total;
+  document.getElementById('progress-pct').textContent = pct + '% complete';
+}
+
+function resetAll() {
+  if (!confirm('Reset all checks and OK marks? This cannot be undone.')) return;
+  document.querySelectorAll('tr[data-id]').forEach(row => {
+    row.classList.remove('checked');
+    const cb = row.querySelector('.check-box');
+    if (cb) cb.classList.remove('checked');
+    const toggle = row.querySelector('.ok-toggle');
+    if (toggle) {
+      toggle.classList.remove('ok-1','ok-2','ok-3');
+      toggle.textContent = '—';
+    }
+  });
+  localStorage.removeItem(STORAGE_KEY);
+  updateProgress();
+}
+
+loadState();
+</script>
+
+</body>
+</html>
